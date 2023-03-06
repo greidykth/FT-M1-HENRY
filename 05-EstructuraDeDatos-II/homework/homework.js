@@ -1,5 +1,7 @@
 'use strict';
 
+const { isString } = require("markdown-it/lib/common/utils");
+
 /* EJERCICIO 1
 Implementar la clase LinkedList, definiendo los siguientes métodos:
   - add: agrega un nuevo nodo al final de la lista;
@@ -10,9 +12,86 @@ Implementar la clase LinkedList, definiendo los siguientes métodos:
   search(isEven), donde isEven es una función que retorna true cuando recibe por parámetro un número par, busca un nodo cuyo valor sea un número par.
   En caso de que la búsqueda no arroje resultados, search debe retornar null.
 */
-function LinkedList() {}
+function LinkedList() {
+  this.head = null;
+}
 
-function Node(value) {}
+function Node(value) {
+    this.value = value;
+    this.next = null;
+}
+
+LinkedList.prototype.add = function (value) {
+  //1 Crear un nodo con ese valor (instanciar un nodo con ese valor)
+  //2 Agragar ese nodo al final de la lista
+
+  var newNode = new Node(value);
+  var current = this.head;
+
+  if(!current) {//Lista vacia   ---> !this.head
+    this.head = newNode;
+    return;
+  }
+
+  while(current.next){//Lista con mas de un nodo
+    current = current.next;
+  }
+
+  current.next = newNode;
+}
+
+LinkedList.prototype.remove = function(){
+  //Elimina el último nodo de la lista y
+  //retorna su valor (tener en cuenta el caso particular de una lista de un solo nodo y de una lista vacía);
+  
+  var current = this.head;
+
+  if(!current) return null; //Lista vacia
+  if(!current.next) { //Lista con un solo nodo
+    var aux = current.value;
+    this.head = null;
+    return aux;
+  }
+
+  //Lista con varios nodos
+  while(current.next.next){
+    current = current.next;
+  }
+  var aux = current.next.value
+  current.next = null;
+  return aux;
+  
+}
+
+LinkedList.prototype.search = function(parametro){
+  /* - search: recibe un parámetro y lo busca dentro de la lista, con una particularidad: 
+  el parámetro puede ser un valor o un callback. En el primer caso, buscamos un nodo cuyo valor coincida con lo buscado; 
+  en el segundo, buscamos un nodo cuyo valor, al ser pasado como parámetro del callback, retorne true. 
+  EJEMPLO 
+  search(3) busca un nodo cuyo valor sea 3;
+  search(isEven), donde isEven es una función que retorna true cuando recibe por parámetro un número par, busca un nodo cuyo valor sea un número par.
+  En caso de que la búsqueda no arroje resultados, search debe retornar null. */
+
+  //Parametro puede ser un valor
+  //Parametro puede ser una función
+  var current = this.head;
+  if(!current) return false;
+
+  if (typeof parametro === 'function') {
+    while(current){
+      if(parametro(current.value)) return current.value;
+      else current = current.next;
+    }
+    return null;
+  }else{
+    while(current){
+      if(current.value === parametro) return parametro;
+      else current = current.next;
+
+    }
+    return null;
+  }
+}
 
 /* EJERCICIO 2
 Implementar la clase HashTable.
@@ -27,7 +106,55 @@ La clase debe tener los siguientes métodos:
 
 Ejemplo: supongamos que quiero guardar {instructora: 'Ani'} en la tabla. Primero puedo chequear, con hasKey, si ya hay algo en la tabla con el nombre 'instructora'; luego, invocando set('instructora', 'Ani'), se almacenará el par clave-valor en un bucket específico (determinado al hashear la clave)
 */
-function HashTable() {}
+function HashTable(numBuckets = 35) {
+  this.numBuckets = numBuckets;
+  this.table = Array(numBuckets);
+}
+
+
+HashTable.prototype.hash = function (key){
+
+  var hash = 0;
+  var codigo = 0;
+
+  if(isString(key)){
+    for (var i = 0; i < key.length; i++) {
+      codigo += key[i].charCodeAt();
+    }
+    hash = codigo % this.numBuckets;
+  } else {
+    throw TypeError('Keys must be strings');
+  }
+
+  return hash;
+}
+
+HashTable.prototype.set = function (key, value){
+
+  if(isString(key)){
+    var posicionBucket = this.hash(key);
+    if(!this.table[posicionBucket]) {
+      this.table[posicionBucket] = { [key]: value };
+    } else{
+      this.table[posicionBucket][key] = value;
+    }
+    
+  } else {
+    throw TypeError('Keys must be strings');
+  }
+}
+
+HashTable.prototype.get = function (key){
+  var posicionBucket = this.hash(key);
+  return this.table[posicionBucket][key]
+}
+
+HashTable.prototype.hasKey = function (key){
+  //var posicionBucket = this.hash(key);
+  //return !!this.table[posicionBucket][key];
+
+  return !!this.get(key);
+}
 
 // No modifiquen nada debajo de esta linea
 // --------------------------------
